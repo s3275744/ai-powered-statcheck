@@ -4,13 +4,11 @@
 [![OpenAI API](https://img.shields.io/badge/OpenAI-API-informational?logo=openai&logoColor=white&color=412991)](https://platform.openai.com/docs)
 
 
+# ai-powered-statcheck
+This project contains an AI-powered Python script for automated statistical error detection using the **Statcheck** method. The script leverages AI to extract statistical test results from scientific articles and then uses Python to independently verify the consistency between reported test statistics and corresponding *p*-values. This ensures that the mathematical verification is accurate, as AI models alone can still make errors in numerical reasoning.
 
-# bachelorThesis
-This project contains two AI-powered Python scripts which can be used for automated statistical error detection. The following tests are included: the **GRIM Test** & **Statcheck**. Both scripts leverage AI to extract data from provided files and then use Python to perform the necessary calculations. This is to ensure that the calculations are done correctly, since AI models are still prone to making errors when it comes to mathematics.
 
 # Credits
-The creation of the code for the GRIM test has been inspired by the paper "_The GRIM Test: A Simple Technique Detects Numerous Anomalies in the Reporting of Results in Psychology_", `(Brown & Heathers, 2016)`. DOI: `10.1177/1948550616673876`.
-
 The creation of the code for Statcheck has been inspired by the paper "_The prevalence of statistical reporting errors in psychology (1985-2013)_", `(Nuijten et al., 2016)`. DOI: `10.3758/s13428-015-0664-2`.
 
 The GitHub page for the R package of `statcheck` created by Michèle Nuijten can be found [here](https://github.com/MicheleNuijten/statcheck). 
@@ -20,14 +18,10 @@ The GitHub page for the R package of `statcheck` created by Michèle Nuijten can
 - [Getting Started](#getting-started)
     - [Installation](#installation)
     - [Running the Tests](#running-the-tests)
-- [GRIM Test](#grim-test)
-    - [How It Works](#how-it-works)
 - [Statcheck](#statcheck)
     - [How It Works](#how-it-works)
 - [Important Tips](#important-tips)
 - [Known issues](#known-issues)
-    - [GRIM-Related Issues](#grim-related-issues)
-    - [Statcheck-Related Issues](#statcheck-related-issues)
 - [Code Quality](#code-quality)
 
 
@@ -43,60 +37,13 @@ First, clone the repository using Git. Make sure Python 3.10.11 is installed. Th
 Once this is done, everything should be installed and ready for use.
 
 ## Running the Tests
-You can run the GRIM Test and Statcheck scripts by executing their corresponding Python file and providing the path to your `.pdf`, `.htm`, `.html`, or `.txt`  file when prompted.
+You can run the statcheck script by executing their corresponding Python file and providing the path to your `.pdf`, `.htm`, `.html`, or `.txt`  file when prompted.
 
- - To run the **GRIM Test**:
-   
-   Execute `$ python testers\GRIM\main.py`
-    
  - To run **statcheck**:
 
    Execute `$ python testers\statcheck\main_single_run.py`
    
    Execute `$ python testers\statcheck\main_multiple_runs.py` if you want to automatically analyse the provided file three times. This improves consistency but increases runtime and costs.
-
-# GRIM Test
-
-The GRIM Test (Granularity-Related Inconsistency of Means) is a tool for detecting inconsistencies in reported statistical means within scientific texts. This code automates this test by using the `GPT-4o` AI model to automatically extract reported mean values along with their corresponding sample sizes from a provided file. 
-
-> [!IMPORTANT]
-> The test only works for means that are composed of integer data, since the calculation relies on the granularity of whole numbers to determine whether the mean is mathematically possible given the sample size. 
-
-
-## How It Works
-
-The process involves the following steps:
-
-1. **Central class:**  The `GRIMTester` class contains all methods for reading context from files, extracting reported means and sample sizes, validating whether GRIM is applicable, performing the GRIM test, and presenting results.
-
-2. **Convert:**  The `.pdf`, `.htm`, or `.html` file gets converted into plain text. `.txt` files are already in plain text.
-
-3. **Segmentation and overlap:**  The plain text is split into segments of 1,000 words each, with an overlap of 200 words between consecutive segments. This larger context window increases the chances that all relevant parameters are captured together in the same context window.
-
-4. **Extract data:**  The `extract_data_from_text` method uses the `GPT-4o` AI model to identify and extract reported means and sample sizes from each segment. The model is instructed to extract values only if:
-   - The value is explicitly labelled as a `mean`.
-   - The mean is based on discrete integer data (e.g., Likert scales).
-   - A sample size (`N`) is explicitly mentioned and clearly linked to the mean.
-
-   Besides extracting relevant data, the model is also instructed to return a `reasoning string`, in which the model must provide a brief justification for why the identified mean value is considered GRIM-applicable.
-
-   This method transforms unstructured data (tests found in the text) into structured data: a Python list of dictionaries. Each extracted test is represented as a dictionary with the following keys:
-   - `reported_mean`: The mean value as reported in the article (float).
-   - `sample_size`: The sample size associated with the reported mean (integer).
-   - `discrete_reasoning`: A brief explanation of why the mean value is considered GRIM-applicable (string). For example: `"mean of 7-point Likert responses clearly linked to N = 28 in same sentence"`.
-
-5. **GRIM applicability check:**  This check removes entries from the final output that are not theoretically testable using the GRIM formula. More specifically, the sample size must not exceed `10^d`, where `d` is the number of decimal places in the reported mean. This is because *any* mean value where the sample size exceeds this threshold can be constructed from integer data, always resulting in a valid mean value. To reduce clutter in the final output, these entries are excluded from the final results.
-
-6. **GRIM test:**  The `grim_test` method calculates if the reported mean is mathematically possible given the sample size and number of decimal places.
-
-7. **Processing results:**  After extraction and testing, the results are added into a `DataFrame` and printed. Each test is displayed in a separate row with the following column headers:
-   - `Consistent`: Indicates whether the reported mean passed the GRIM test (`Yes` or `No`).
-   - `Reported Mean`: The original mean value as extracted from the text, including trailing zeros.
-   - `Sample Size`: The corresponding sample size.
-   - `Decimals`: The number of decimal places in the reported mean.
-   - `Reasoning`: The AI-generated explanation for why the reported mean was considered GRIM-applicable.
-
-
 
 
 # Statcheck
@@ -159,22 +106,15 @@ The process involves the following steps:
 
 - **API key**: Ensure that you have an OpenAI API key stored in your `.env` file under the variable `OPENAI_API_KEY` for the code to work. Without an OpenAI API key, the code cannot use the `extract_data_from_text` method, which means the code cannot extract the relevant data from the context. 
 
-- **Decimal places**: Both the GRIM test and Statcheck respect the number of decimal places in the reported data. Keep this in mind when interpreting the results.
+- **Decimal places**: The script respects the number of decimal places in the reported data. Keep this in mind when interpreting the results.
 
-- **Decimal separator**: Both the GRIM test and Statcheck only recognize a dot `.` as a valid decimal separator. A comma `,` is regarded as thousand separator. For example, `'10,159'` is interpreted as 'ten thousand one hundred fifty-nine', not 'ten point one five nine'.
+- **Decimal separator**: The script only recognises a dot `.` as a valid decimal separator. A comma `,` is regarded as thousand separator. For example, `'10,159'` is interpreted as 'ten thousand one hundred fifty-nine', not 'ten point one five nine'.
 
 - **Error handling**: The script includes basic error handling for file formats and extraction issues. Make sure to check the console for any error messages if something goes wrong. Some hints are also programmed in the scripts: e.g., when providing an `"r"` test with no `DF`, the script returns the following `Note`: _"Correlation test requires degrees of freedom (df1). None provided."_
 
 
 # Known Issues
-## GRIM-Related Issues
-- **Incorrect GRIM applicability detection:**  The AI model frequently misclassifies floating-point means as GRIM-applicable, resulting in false positives. GRIM should only be applied to means derived from discrete integer data (e.g., Likert scales).
 
-- **Segmentation trade-off:**   Articles are processed in segments of 1,000 words with 200-word overlap. While this prevents the context windows from becoming too large, it also increases the chance that relevant values (mean and sample size) appear in separate segments and cannot be matched.
-
-
-
-## Statcheck-Related Issues
 - **Typesetting issues:** In some journals, mathematical symbols such as `<` are replaced by an image of this symbol, which can’t be converted to plain text. This means that the correct operator cannot be extracted, meaning the script has to fill in an operator itself. Usually, the script fills in the `=` operator, which is likely to be incorrect.
 - **Contextual understanding:** Currently, the script only accounts for Huynh-Feldt corrections; other statistical corrections have not yet been implemented. Furthermore, the script attempts to identifiy the test tail (`'one'` or `'two'`) which was used, based on the context. In future versions, the script can be programmed to allow for the detection of additional statistical corrections.
 
