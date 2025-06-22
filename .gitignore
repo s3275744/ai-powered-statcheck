@@ -1,0 +1,7 @@
+# Ignore .env file
+/.env
+.venv/
+
+# Byte‑code caches
+__pycache__/
+*.py[cod]
