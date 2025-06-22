@@ -5,7 +5,7 @@
 
 
 # ai-powered-statcheck
-This project contains an AI-powered Python script for automated statistical error detection using the **Statcheck** method. The script leverages AI to extract statistical test results from scientific articles and then uses Python to independently verify the consistency between reported test statistics and corresponding *p*-values. This ensures that the mathematical verification is accurate, as AI models alone can still make errors in numerical reasoning.
+This project contains an AI-powered Python script for automated statistical error detection using the **Statcheck** method. The script leverages AI to extract statistical test results from scientific articles and then uses Python to independently verify the consistency between reported test statistics and corresponding *p*-values. This is to ensure that the calculations are done correctly, since AI models are still prone to making errors when it comes to mathematics.
 
 
 # Credits
