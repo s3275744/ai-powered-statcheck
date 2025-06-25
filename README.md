@@ -41,9 +41,9 @@ You can run the statcheck script by executing their corresponding Python file an
 
  - To run **statcheck**:
 
-   Execute `$ python testers\statcheck\main_single_run.py`
+   Execute `$ python statcheck\main_single_run.py`
    
-   Execute `$ python testers\statcheck\main_multiple_runs.py` if you want to automatically analyse the provided file three times. This improves consistency but increases runtime and costs.
+   Execute `$ python statcheck\main_multiple_runs.py` if you want to automatically analyse the provided file three times. This improves consistency but increases runtime and costs.
 
 
 # Statcheck
