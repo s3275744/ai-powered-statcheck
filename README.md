@@ -45,6 +45,8 @@ You can run the statcheck script by executing their corresponding Python file an
    
    Execute `$ python statcheck\main_multiple_runs.py` if you want to automatically analyse the provided file three times. This improves consistency but increases runtime and costs.
 
+   Execute `$ streamlit run statcheck\streamlit.py` if you prefer the user-friendly Streamlit interface instead of running commands via the command line.
+
 
 # Statcheck
 Statcheck is a tool for checking the consistency of reported statistical test results in scientific texts. It works as a "spellchecker" for statistics. It recalculates a valid _p_-value range based on the corresponding test statistic and degree(s) of freedom (a z-test only requires a test statistic). If the reported _p_-value falls within this valid range of _p_-values, the test is considered to be consistent. If the reported _p_-value does not fall within this range of valid _p_-values, the test is considered to be inconsistent. This script can recognise the following NHST results: t-tests, F-tests, correlations (r), z-tests & $\chi^2$ -tests.
