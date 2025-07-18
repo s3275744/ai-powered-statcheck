@@ -53,6 +53,22 @@ STATCHECK_PROMPT: str = ("""
         - A chi-sqaure test can also be reported as "G-square", "G^2", or "G2". Example: G2(18) = 17.50, p =.489, is a chi2 test. The test type should still be chi2.
         - **IMPORTANT: "rho" is not the same as "r". Do not interpret "rho" as an "r" test.**
         - For p-values reported with inequality signs (e.g., p < 0.05), extract both the operator ('<') and the numerical value (0.05). This goes for all operators.
+            - IMPORTANT: Pay very close attention to the operator! YOU MUST EXTRACT THE CORRECT OPERATOR!
+            - EXAMPLE: F(2, 72) = 176.30, MSE = 111.94, p <.001, extract exactly as follows:
+                - test_type: "f"
+                - df1: 2
+                - df2: 72
+                - test_value: 176.30
+                - operator: "<"
+                - reported_p_value: "0.001"
+                - epsilon: None
+            - EXAMPLE:  F(2, 72) = 4.86, MSE = 111.94, p =.01, extract exactly as follows:
+                - test_type: "f"
+                - df1: 2
+                - df2: 72
+                - test_value: 4.86
+                - operator: "="
+                - reported_p_value: "0.01"
         - Do not perform any calculations or inferences beyond what's explicitly stated.
         - It can occur that a test is split over multiple sentences. Example: "F"(1, 25) = 11.36, MSE = .040, ηp
         2 =

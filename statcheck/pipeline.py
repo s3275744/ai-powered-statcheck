@@ -78,6 +78,8 @@ class StatcheckTester:
         # Check if required degrees of freedom are missing
         if (test_type in ["t", "r", "chi2"] and df1 is None) or (test_type == "f" and (df1 is None or df2 is None)):
             return False, (None, None)
+        if test_value is None:
+            return False, (None, None)
 
         # Calculate the rounding boundaries for the test statistic
         decimal_places = max(StatcheckTester.get_decimal_places(str(test_value)), 2)  # Treat 1 decimal as 2
@@ -89,42 +91,46 @@ class StatcheckTester:
         if test_type == "r":
             # Correlation test (r)
             # Convert to t-values
-            t_lower = (lower_test_value * ((df1) ** 0.5) / ((1 - lower_test_value**2) ** 0.5))
-            t_upper = (upper_test_value * ((df1) ** 0.5) / ((1 - upper_test_value**2) ** 0.5))
-
+            if df1 is None or lower_test_value is None or upper_test_value is None:
+                return False, (None, None)
+            # r must be between -1 and 1 (exclusive)
+            if not (-1 < lower_test_value < 1) or not (-1 < upper_test_value < 1):
+                return False, (None, None)
+            try:
+                t_lower = (lower_test_value * ((df1) ** 0.5) / ((1 - lower_test_value**2) ** 0.5))
+                t_upper = (upper_test_value * ((df1) ** 0.5) / ((1 - upper_test_value**2) ** 0.5))
+            except Exception:
+                return False, (None, None)
             # Calculate p-values at lower and upper test_value bounds
-            p_lower = stats.t.sf(abs(t_lower), df1)
-            p_upper = stats.t.sf(abs(t_upper), df1)
+            p_lower = float(stats.t.sf(abs(t_lower), df1))
+            p_upper = float(stats.t.sf(abs(t_upper), df1))
 
         elif test_type == "t":
             # t-test
-            # Calculate p-values at lower and upper test_value bounds
-            p_lower = stats.t.sf(abs(lower_test_value), df1)
-            p_upper = stats.t.sf(abs(upper_test_value), df1)
+            p_lower = float(stats.t.sf(abs(lower_test_value), df1))
+            p_upper = float(stats.t.sf(abs(upper_test_value), df1))
 
         elif test_type == "f":
             # Only apply the Huynh-Feldt correction if epsilon is not None and df1, df2 are both integers
             if epsilon is not None and isinstance(df1, int) and isinstance(df2, int):
                 corrected_df1 = epsilon * df1
                 corrected_df2 = epsilon * df2
-                p_lower = stats.f.sf(lower_test_value, corrected_df1, corrected_df2)
-                p_upper = stats.f.sf(upper_test_value, corrected_df1, corrected_df2)
+                p_lower = float(stats.f.sf(lower_test_value, corrected_df1, corrected_df2))
+                p_upper = float(stats.f.sf(upper_test_value, corrected_df1, corrected_df2))
             else:
                 # Standard F-test (or df1/df2 are already floats, implying correction was applied previously)
-                p_lower = stats.f.sf(lower_test_value, df1, df2)
-                p_upper = stats.f.sf(upper_test_value, df1, df2)
+                p_lower = float(stats.f.sf(lower_test_value, df1, df2))
+                p_upper = float(stats.f.sf(upper_test_value, df1, df2))
 
         elif test_type == "chi2":
             # Chi-square test
-            # Calculate p-values at lower and upper test_value bounds
-            p_lower = stats.chi2.sf(lower_test_value, df1)
-            p_upper = stats.chi2.sf(upper_test_value, df1)
+            p_lower = float(stats.chi2.sf(lower_test_value, df1))
+            p_upper = float(stats.chi2.sf(upper_test_value, df1))
 
         elif test_type == "z":
             # Z-test (does not require degrees of freedom)
-            # Calculate p-values at lower and upper test_value bounds
-            p_lower = stats.norm.sf(abs(lower_test_value))
-            p_upper = stats.norm.sf(abs(upper_test_value))
+            p_lower = float(stats.norm.sf(abs(lower_test_value)))
+            p_upper = float(stats.norm.sf(abs(upper_test_value)))
 
         else:
             # Unknown test type
@@ -134,14 +140,14 @@ class StatcheckTester:
         if test_type not in ["chi2", "f"]:
             if tail == "two":
                 # For two-tailed tests, double the one-tailed p-value
-                p_lower = min(p_lower * 2, 1)
-                p_upper = min(p_upper * 2, 1)
+                p_lower = min(p_lower * 2, 1.0)
+                p_upper = min(p_upper * 2, 1.0)
             elif tail != "one":
                 return False, (None, None)
 
         # Ensure p_lower is the smaller p-value
-        p_value_lower = min(p_lower, p_upper)
-        p_value_upper = max(p_lower, p_upper)
+        p_value_lower = min(float(p_lower), float(p_upper))
+        p_value_upper = max(float(p_lower), float(p_upper))
 
         # Handle reported_p_value being 'ns'
         if reported_p_value == "ns":
@@ -149,13 +155,15 @@ class StatcheckTester:
 
         # Convert reported_p_value to numeric if possible
         try:
-            reported_p_value = float(reported_p_value)
-        except ValueError:
+            reported_p_value_float = float(reported_p_value) if reported_p_value is not None else None
+        except (ValueError, TypeError):
             # Cannot convert to numeric
+            return False, (None, None)
+        if reported_p_value_float is None:
             return False, (None, None)
 
         consistent = StatcheckTester.compare_p_values(
-            (p_value_lower, p_value_upper), operator, reported_p_value
+            (p_value_lower, p_value_upper), operator, reported_p_value_float
         )
 
         return consistent, (p_value_lower, p_value_upper)
@@ -187,6 +195,9 @@ class StatcheckTester:
         # Unpack the recalculated p-value range from the tuple
         p_value_lower, p_value_upper = recalculated_p_value_range
 
+        if p_value_lower is None or p_value_upper is None or reported_value is None:
+            return False
+
         if operator == "<":
             return p_value_lower < reported_value
 
@@ -203,9 +214,9 @@ class StatcheckTester:
             # Check if the reported p-value falls within the recalculated range
             if reported_p_upper >= p_value_lower and reported_p_lower <= p_value_upper:
                 return True
-
             else:
                 return False
+        return False
 
     @staticmethod
     def determine_reported_significance(
@@ -224,14 +235,14 @@ class StatcheckTester:
             return None  # Cannot determine significance for 'ns'
 
         try:
-            reported_p_value = float(reported_p_value)
-        except ValueError:
+            reported_p_value_float = float(reported_p_value)
+        except (ValueError, TypeError):
             return None  # If it cannot be converted, treat as indeterminate
 
         if operator in ("=", "<"):
-            return reported_p_value <= significance_level
+            return reported_p_value_float <= significance_level
         elif operator == ">":
-            return reported_p_value < significance_level
+            return reported_p_value_float < significance_level
         return None  # Invalid operator
 
     @staticmethod
@@ -247,6 +258,9 @@ class StatcheckTester:
         :return: True if significant, False if not significant.
         """
         lower, upper = p_value_range
+
+        if lower is None or upper is None:
+            return None
 
         if upper < significance_level:
             return True
@@ -282,7 +296,10 @@ class StatcheckTester:
             temperature=0.0,
         )
 
-        response_content = response.choices[0].message.content.strip()
+        response_content = response.choices[0].message.content
+        if response_content is None:
+            return None
+        response_content = response_content.strip()
         # Remove any code blocks that might wrap the response
         response_content = (
             response_content.replace("```python", "")
@@ -320,7 +337,7 @@ class StatcheckTester:
                 text = ""
                 with fitz.open(file_path) as doc:
                     for page in doc:
-                        text += page.get_text() + "\n"
+                        text += page.get_text() + "\n"  # type: ignore[attr-defined]
 
             elif extension in (".html", ".htm"):
                 with open(file_path, "r", encoding="utf-8") as f:
@@ -481,7 +498,7 @@ class StatcheckTester:
                 # ------------------ One-tailed edge case ------------------
                 if test_type in ["t", "z", "r"] and not consistent and tail == "two":
                     consistent_one_tailed, _ = self.calculate_p_value(
-                        test_type, df1, df2, test_value, operator, reported_p_value, None, tail="one"
+                        test_type, df1, df2, test_value, operator, str(reported_p_value), None, tail="one"
                     )
                     if consistent_one_tailed:
                         notes_list.append("Consistent for one-tailed, inconsistent for two-tailed.")
@@ -513,9 +530,11 @@ class StatcheckTester:
 
         # ------------------------------ Return results --------------------------------
         if statcheck_results:
-            df_statcheck_results = pd.DataFrame(statcheck_results)[
-                ["Consistent", "APA Reporting", "Reported P-value", "Valid P-value Range", "Notes"]
-            ]
-            return df_statcheck_results
+            df_statcheck_results = pd.DataFrame(statcheck_results)
+            # Ensure we always return a DataFrame, not a Series
+            columns = ["Consistent", "APA Reporting", "Reported P-value", "Valid P-value Range", "Notes"]
+            if len(df_statcheck_results.shape) == 2 and df_statcheck_results.shape[1] == 1:
+                return df_statcheck_results
+            return df_statcheck_results.loc[:, columns]
 
         return None
