@@ -2,6 +2,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Linted with Ruff](https://img.shields.io/badge/linter-ruff-orange)](https://docs.astral.sh/ruff/)
 [![OpenAI API](https://img.shields.io/badge/OpenAI-API-informational?logo=openai&logoColor=white&color=412991)](https://platform.openai.com/docs)
+[![Streamlit 1.47.0](https://img.shields.io/badge/Streamlit-1.47.0-orange?logo=streamlit&logoColor=white)](https://streamlit.io/)
 
 
 # ai-powered-statcheck
