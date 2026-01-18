@@ -1,6 +1,8 @@
 # Ignore .env file
 /.env
 .venv/
+.venv_wsl/
+data/
 
 # Byte‑code caches
 __pycache__/
